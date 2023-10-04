@@ -1,0 +1,5 @@
+*.config
+.CoqMakefile.d
+CoqMakefile
+CoqMakefile.conf
+html/

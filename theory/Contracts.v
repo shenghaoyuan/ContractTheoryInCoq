@@ -1,7 +1,7 @@
-Require Import Sets.
-Require Import FunctionalExtensionality.
-Require Import ProofIrrelevance.
-Require Import Classical.
+From contract.theory Require Import Sets.
+From Coq Require Import FunctionalExtensionality.
+From Coq Require Import ProofIrrelevance.
+From Coq Require Import Classical.
 Include CoqSet.
 
 Definition set := @τ.
@@ -46,7 +46,7 @@ Proof.
 Qed.
 
 Definition satisfies (s : state) (c : contract) : Prop :=
-  s ∈ ¬ c.(A) ∪ c.(G).
+  s ∈ ¬ (A c) ∪ (G c).
 
 Definition implements (σ : component) (c : contract) :  Prop :=
   forall s, s  ∈ σ -> satisfies s c.
@@ -54,18 +54,18 @@ Definition implements (σ : component) (c : contract) :  Prop :=
 Notation "σ ⊢ c" := (implements σ c) (at level 70, no associativity).
 
 Definition provides (e : environment) (c : contract) : Prop :=
-  e ⊆ c.(A).
+  e ⊆ (A c).
 
 Definition saturate (c : contract) : contract :=
-  mkContract (c.(A)) (¬ c.(A) ∪ c.(G)).
+  mkContract ((A c)) (¬ (A c) ∪ (G c)).
 
 Notation "# c" := (saturate c) (at level 80, no associativity).
 
-Definition is_saturated (c : contract) : Prop := SubsetEq (¬ c.(A)) (c.(G)).
+Definition is_saturated (c : contract) : Prop := SubsetEq (¬ (A c)) ((G c)).
 
 Definition refines (c1 : contract) (c2 : contract) : Prop :=
   let c1' := saturate c1 in let c2' := saturate c2 in
-  (c2'.(A)) ⊆ (c1'.(A)) /\ (c1'.(G)) ⊆ (c2'.(G)).
+  (A c2') ⊆ (A c1') /\ (G c1') ⊆ (G c2').
 
 Notation "c1 ≼ c2" := (refines c1 c2) (at level 70, no associativity).
 
@@ -84,29 +84,29 @@ Qed.
 
 Definition compose (c1 c2 : contract) : contract :=
   let c1' := saturate c1 in let c2' := saturate c2 in
-  let g := c1'.(G) ∩ c2'.(G) in let a := (c1'.(A) ∩ c2'.(A)) ∪ ¬ g in
+  let g := (G c1') ∩ (G c2') in let a := ((A c1') ∩ (A c2')) ∪ ¬ g in
   mkContract a g.
 
 Notation "c1 ⊗ c2" := (compose c1 c2) (at level 61, left associativity).
 
 Definition glb (c1 : contract) (c2 : contract) : contract :=
   let c1' := saturate c1 in let c2' := saturate c2 in
-  mkContract (c1'.(A) ∪ c2'.(A)) (c1'.(G) ∩ c2'.(G)).
+  mkContract ((A c1') ∪ (A c2')) ((G c1') ∩ (G c2')).
 
 Notation "c1 ⊓ c2" := (glb c1 c2) (at level 61, left associativity).
 
 Definition lub (c1 c2 : contract) : contract :=
   let c1' := saturate c1 in let c2' := saturate c2 in
-  mkContract (c1'.(A) ∩ c2'.(A)) (c1'.(G) ∪ c2'.(G)).
+  mkContract ((A c1') ∩ (A c2')) ((G c1') ∪ (G c2')).
 
 Notation "c1 ⊔ c2" := (lub c1 c2) (at level 61, left associativity).
 
 Definition conforms (c : contract) (e : assertion) : Prop :=
-  (c.(A) ∩ c.(G)) ⊆ e.
+  ((A c) ∩ (G c)) ⊆ e.
 
 Definition is_consistent (c : contract) : Prop := exists s : state, satisfies s c.
 
-Definition is_compatible (c : contract) : Prop := exists s : state, s ∈ (c.(A)).
+Definition is_compatible (c : contract) : Prop := exists s : state, s ∈ ((A c)).
 
 Lemma is_satured_sature : forall c : contract, is_saturated (saturate c).
 Proof.
@@ -312,7 +312,7 @@ Proof.
 Qed.
 
 Theorem compose_assumption : forall c1 c2 : contract,
-  A (c1 ⊗ c2) ⊆ (c1).(A) ∪ ¬ (c2).(G).
+  A (c1 ⊗ c2) ⊆ (A c1) ∪ ¬ (G c2).
 Proof.
   intros [A1 G1] [A2 G2].
   simpl.
@@ -429,8 +429,8 @@ Qed.
 Theorem compose_set : forall (c1 c2 c : contract),
   (forall (σ1 σ2 : component) (e : environment), σ1 ⊢ c1 -> σ2 ⊢ c2 -> provides e c ->
   (σ1 ∩ σ2 ⊢ c /\ provides (e ∩ σ2) c1 /\ provides (e ∩ σ1) c2)) ->
-  (# c1).(G) ∩ (# c2).(G) ⊆ (# c).(G) /\
-  (# c).(A) ∩ (# c2).(G) ⊆ (# c1).(A) /\ (# c).(A) ∩ (# c1).(G) ⊆ (# c2).(A).
+  (G (# c1)) ∩ (G (# c2)) ⊆ (G (# c)) /\
+  (A (# c)) ∩ (G (# c2)) ⊆ (A (# c1)) /\ (A (# c)) ∩ (G (# c1)) ⊆ (A (# c2)).
 Proof.
   intros.
   unfold saturate.
@@ -567,7 +567,7 @@ Definition extend_state_default (e1 : state d1) : state d2 :=
 
 Definition project_contract (c2 : contract d2)  : contract d1 :=
   let c2' := saturate _ c2 in
-  mkContract _ (project_assertion_forall (c2'.(A _))) (project_assertion (G _ c2')).
+  mkContract _ (project_assertion_forall ((A _ c2'))) (project_assertion (G _ c2')).
 
 Definition extend_contract (c1 : contract d1) : contract d2 :=
   let c1' := saturate _ c1 in

@@ -1,5 +1,5 @@
-Require Sets.
-Require Import Contracts.
+From contract.theory Require Sets.
+From contract.theory Require Import Contracts.
 
 (** It should be already defined in the std lib *)
 Lemma eq_dec_nat : forall x y : nat, {x = y} + {x <> y}.

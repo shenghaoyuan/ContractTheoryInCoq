@@ -15,9 +15,9 @@
  * In particular, it is useful to prove the last Theorem [add_remove].
  *)
 
-Require Import FunctionalExtensionality.
-Require Import PropExtensionality.
-Class Discr(Γ: Type) := {
+From Coq Require Import FunctionalExtensionality.
+From Coq Require Import PropExtensionality.
+Polymorphic Class Discr(Γ: Type) := {
       eq_dec : forall x y: Γ, { x = y } + { x <> y }
   }.
 

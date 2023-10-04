@@ -1,7 +1,7 @@
-Require Import Contracts.
-Require Import Sets.
-Require Import Simple_Logic.
-Require Import Classical.
+From contract.theory Require Import Contracts.
+From contract.theory Require Import Sets.
+From contract.theory Require Import Simple_Logic.
+From Coq Require Import Classical.
 Include CoqSet.
 
 Section domain_defined.
